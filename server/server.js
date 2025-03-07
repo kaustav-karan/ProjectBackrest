@@ -6,20 +6,15 @@ const cors = require("cors");
 const randID = require("./controllers/randomIDGenerator.js");
 const multer = require("multer");
 const { Sequelize, DataTypes } = require("sequelize");
+require("dotenv").config(); // Load environment variables
 
 const app = express();
-const PORT = 5000;
-const FILES_DIR = path.join(__dirname, "files");
-const SUPER_PEER_PORT = 5000;
-const SUPER_PEER_IP = "localhost";
-const SUPER_PEER_URL = `http://${SUPER_PEER_IP}:${SUPER_PEER_PORT}`;
-const DATABASE_URL = "postgres://postgres:frl#123@localhost:5432/file_server";
 
 app.use(cors());
 app.use(express.json());
 
 // PostgreSQL connection using Sequelize
-const sequelize = new Sequelize(DATABASE_URL, {
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: "postgres",
   logging: false,
 });
@@ -40,9 +35,9 @@ const File = sequelize.define("File", {
 // Notify super-peer when a new file is added
 File.afterCreate(async (file) => {
   try {
-    await axios.post(`http://${SUPER_PEER_IP}:${SUPER_PEER_PORT}/update`, {
+    await axios.post(`http://${process.env.SUPER_PEER_IP}:${process.env.SUPER_PEER_PORT}/publishFile`, {
       trackID: file.trackID,
-      filePath: file.filePath,
+      // filePath: file.filePath,
       size: file.size,
       publisherName: file.publisherName,
     });
@@ -131,13 +126,13 @@ app.post("/get-file", async (req, res) => {
       clientIP: clientIP,
     };
 
-// Send file + metadata to client backend at /load-file
+    // Send file + metadata to client backend at /load-file
     await axios.post(`http://${clientIP}:3001/load-file`, track, {
       headers: { "Content-Type": "application/json" },
     });
 
     //notify super-peer of the availability of the file
-    await axios.post(`${SUPER_PEER_URL}/update-peer-list`, availability);
+    await axios.post(`${process.env.SUPER_PEER_URL}/update-peer-list`, availability);
 
     console.log(`Sent file to client backend: ${fileRecord.trackID}`);
 

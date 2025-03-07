@@ -7,6 +7,8 @@ const path = require("path");
 const axios = require("axios");
 const mongoose = require("mongoose");
 
+require("dotenv").config(); // Load environment variables from .env file
+
 const app = express();
 
 //creating a http server and upgrading it to a websocket
@@ -18,11 +20,7 @@ const io = new Server(server, {
   },
 });
 const FILES_DIR = path.join(__dirname, "files");
-const SUPER_PEER_PORT = 5000;
-const SUPER_PEER_IP = "localhost";
-const SUPER_PEER_URL = `http://${SUPER_PEER_IP}:${SUPER_PEER_PORT}`;
-const PORT = 3001;
-const MONGODB_URL = "mongodb://localhost:27017/clientBackend";
+
 
 app.use(cors()); // middleware to allow cross-origin requests
 app.use(express.json());
@@ -104,7 +102,7 @@ app.post("/get-file", async (req, res) => {
       
       // Forward request to the super-peer
       try {
-        const source = await axios.post(`${SUPER_PEER_URL}/get-file`, { trackID });
+        const source = await axios.post(`${process.env.SUPER_PEER_URL}/get-file`, { trackID });
         console.log("Response from super-peer:", source.data);
         if (response.data && response.data.peerIP) {
           const { peerIP } = response.data;  // Extracting peer IP from response
