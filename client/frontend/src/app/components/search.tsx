@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
 
-const CLIENT_BACKEND_IP = "http://localhost:3001"; // Change as needed
+require("dotenv").config(); // Load environment variables
+
 let socket: Socket;
 
 export default function SearchFile() {
@@ -15,7 +16,7 @@ export default function SearchFile() {
 
   useEffect(() => {
     // Establish WebSocket connection
-    socket = io(CLIENT_BACKEND_IP, {
+    socket = io(process.env.CLIENT_BACKEND_IP, {
       path: "/",
       autoConnect: true,
     });
@@ -47,7 +48,7 @@ export default function SearchFile() {
     }
 
     try {
-      const response = await axios.post(`${CLIENT_BACKEND_IP}/get-file`, { trackID });
+      const response = await axios.post(`${process.env.CLIENT_BACKEND_IP}/get-file`, { trackID });
 
       if (response.data.file) {
         setMessage("File fetched successfully!");

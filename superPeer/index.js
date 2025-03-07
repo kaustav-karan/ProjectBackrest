@@ -2,12 +2,9 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const TrackLog = require("./models/Track");
+require("dotenv").config(); // Load environment variables
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const SERVER_IP = "localhost";
-const SERVER_PORT = 5000;
-const SERVER_URL = `http://${SERVER_IP}:${SERVER_PORT}`;
 
 // Middleware
 app.use(bodyParser.json());
@@ -86,11 +83,34 @@ app.get("/query/track/:trackId", async (req, res) => {
   }
 });
 
-app.post("/update-file-list", (req, res) => {
-  const { files } = req.body;
-  console.log("Received updated file list");
-  res.json({ message: "File list updated successfully" });
+app.post("/publishFile", async (req, res) => {
+  try {
+    const { trackID, size, publisherName} = req.body;
+    const peerIP = getClientIp(req);
+
+    let checkExistingTrack = await TrackLog.findOne({ trackId: trackID });
+
+    if (!checkExistingTrack) {
+      const newTrack = new TrackLog({
+        trackId: trackID,
+        trackMetadata: {
+          trackSize: size,
+          publisherName: publisherName,
+        },
+      });
+      await newTrack.save();
+      console.log(`Stored new track metadata: ${trackID}`);
+      res.status(200).json({ message: "File metadata stored successfully" });
+    }
+    else {
+      return res.status(400).json({ error: "Track already exists" });
+  }
+  } catch (error) {
+    console.error("Error storing file metadata:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
+
 
 app.post("/update-peer-list", async(req, res) => {
   const { clientIP, peerAvailable, trackID } = req.body;
@@ -104,11 +124,11 @@ app.post("/update-peer-list", async(req, res) => {
   );
 
   if (!peerExists) {
-    trackInfo.trackMetadata.peerList.push({ peerURI });
+    trackInfo.trackMetadata.peerList.push({ peerURI: clientIP });
   }
 
   // Save the updated document back to MongoDB
-  await trackLog.save();
+  await trackInfo.save();
 });
 
 app.post("/get-file", async (req, res) => {
@@ -123,12 +143,12 @@ app.post("/get-file", async (req, res) => {
     if (trackInfo.trackMetadata.peerAvailable && trackInfo.trackMetadata.peerList.length > 0) {
       return res.status(200).json({ peerIP: trackInfo.trackMetadata.peerList[0].peerURI });
     }else{
-      return res.status(200).json({ peerIP: SERVER_IP });
+      return res.status(200).json({ peerIP: process.env.SERVER_IP });
     }
   }
 });
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Logging server is running on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`Logging server is running on port ${process.env.PORT}`);
 });
