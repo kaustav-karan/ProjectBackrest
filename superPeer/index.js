@@ -5,6 +5,9 @@ const TrackLog = require("./models/Track");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SERVER_IP = "localhost";
+const SERVER_PORT = 5000;
+const SERVER_URL = `http://${SERVER_IP}:${SERVER_PORT}`;
 
 // Middleware
 app.use(bodyParser.json());
@@ -80,6 +83,48 @@ app.get("/query/track/:trackId", async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ error: "Failed to query track logs", details: err });
+  }
+});
+
+app.post("/update-file-list", (req, res) => {
+  const { files } = req.body;
+  console.log("Received updated file list");
+  res.json({ message: "File list updated successfully" });
+});
+
+app.post("/update-peer-list", async(req, res) => {
+  const { clientIP, peerAvailable, trackID } = req.body;
+
+  const trackInfo = await TrackLog.findOne({ trackID });
+  trackInfo.trackMetadata.peerAvailable = peerAvailable;
+
+  // Check if the peer already exists in the peerList
+  const peerExists = trackInfo.trackMetadata.peerList.some(
+    (peer) => peer.peerURI === peerURI
+  );
+
+  if (!peerExists) {
+    trackInfo.trackMetadata.peerList.push({ peerURI });
+  }
+
+  // Save the updated document back to MongoDB
+  await trackLog.save();
+});
+
+app.post("/get-file", async (req, res) => {
+  const { trackID } = req.body;
+
+  // Find the track in MongoDB
+  const trackInfo = await TrackLog.findOne({ trackID });
+
+  if (!trackInfo) {
+    return res.status(404).json({ error: "Track metadata not found" });
+  }else{
+    if (trackInfo.trackMetadata.peerAvailable && trackInfo.trackMetadata.peerList.length > 0) {
+      return res.status(200).json({ peerIP: trackInfo.trackMetadata.peerList[0].peerURI });
+    }else{
+      return res.status(200).json({ peerIP: SERVER_IP });
+    }
   }
 });
 
