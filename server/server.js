@@ -13,7 +13,7 @@ const FILES_DIR = path.join(__dirname, "files");
 const SUPER_PEER_PORT = 5000;
 const SUPER_PEER_IP = "localhost";
 const SUPER_PEER_URL = `http://${SUPER_PEER_IP}:${SUPER_PEER_PORT}`;
-const DATABASE_URL = "postgres://postgres:password@localhost:5432/file_server";
+const DATABASE_URL = "postgres://postgres:frl#123@localhost:5432/file_server";
 
 app.use(cors());
 app.use(express.json());
@@ -40,7 +40,7 @@ const File = sequelize.define("File", {
 // Notify super-peer when a new file is added
 File.afterCreate(async (file) => {
   try {
-    await axios.post("http://super-peer-ip:port/update", {
+    await axios.post(`http://${SUPER_PEER_IP}:${SUPER_PEER_PORT}/update`, {
       trackID: file.trackID,
       filePath: file.filePath,
       size: file.size,
