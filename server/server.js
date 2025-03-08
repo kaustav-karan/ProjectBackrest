@@ -91,7 +91,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-app.post("/get-file", async (req, res) => {
+app.post("/fetch-file", async (req, res) => {
   const { trackId } = req.body;
 
   const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
