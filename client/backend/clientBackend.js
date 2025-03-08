@@ -21,7 +21,6 @@ const io = new Server(server, {
 });
 const FILES_DIR = path.join(__dirname, "files");
 
-
 app.use(cors()); // middleware to allow cross-origin requests
 app.use(express.json());
 
@@ -33,8 +32,8 @@ io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
 
   socket.on("file-fetched", (data) => {
-    console.log(`File fetched: ${data.trackID}`);
-    io.emit("message", `File "${data.trackID}" was fetched!`);
+    console.log(`File fetched: ${data.trackId}`);
+    io.emit("message", `File "${data.trackId}" was fetched!`);
   });
 
   socket.on("disconnect", () => {
@@ -52,7 +51,7 @@ mongoose
   });
 
 const trackSchema = new mongoose.Schema({
-  trackID: { type: String, required: true },
+  trackId: { type: String, required: true },
   file: { type: String, required: true }, //unique name of the file
   filePath: { type: String, required: true }, // Store path to cached file
   size: { type: Number, required: true },
@@ -64,9 +63,9 @@ const Track = mongoose.model("Track", trackSchema);
 // Endpoint to receive and store the file
 app.post("/load-file", async (req, res) => {
   try {
-    const { trackID, size, publisherName, file, filename } = req.body;
+    const { trackId, size, publisherName, file, filename } = req.body;
 
-    if (!trackID || !size || !publisherName || !file || !filename) {
+    if (!trackId || !size || !publisherName || !file || !filename) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -77,39 +76,45 @@ app.post("/load-file", async (req, res) => {
     console.log(`File cached at: ${filePath}`);
 
     // Save metadata and file path to MongoDB
-    await Track.create({ trackID, size, publisherName, filePath });
+    await Track.create({ trackId, size, publisherName, filePath });
 
     res.status(200).json({ message: "File received and stored", filePath });
-
   } catch (error) {
     console.error("Error handling file:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// API to fetch file based on trackID
+// API to fetch file based on trackId
 app.post("/get-file", async (req, res) => {
   try {
-    const { trackID } = req.body;
-    if (!trackID) {
-      return res.status(400).json({ error: "TrackID is required" });
+    const { trackId } = req.body;
+    if (!trackId) {
+      return res.status(400).json({ error: "trackId is required" });
     }
 
     // Find the track in MongoDB
-    const track = await Track.findOne({ trackID });
+    const track = await Track.findOne({ trackId });
     if (!track) {
-      console.log(`TrackID ${trackID} not found. Forwarding request to super-peer...`);
-      
+      console.log(
+        `trackId ${trackId} not found. Forwarding request to super-peer...`
+      );
+
       // Forward request to the super-peer
       try {
-        const source = await axios.post(`${process.env.SUPER_PEER_URL}/get-file`, { trackID });
+        const source = await axios.post(
+          `${process.env.SUPER_PEER_URL}/get-file`,
+          { trackId }
+        );
         console.log("Response from super-peer:", source.data);
-        if (response.data && response.data.peerIP) {
-          const { peerIP } = response.data;  // Extracting peer IP from response
-          console.log(`File found at: ${peerIP}`);
+        if (response.data && response.data.peerIp) {
+          const { peerIp } = response.data; // Extracting peer Ip from response
+          console.log(`File found at: ${peerIp}`);
 
           // Now make another request to fetch the file from the identified source (peer/server)
-          const fileResponse = await axios.post(`http://${peerIP}/fetch-file`, { trackID });
+          const fileResponse = await axios.post(`http://${peerIp}/fetch-file`, {
+            trackId,
+          });
         }
       } catch (error) {
         console.error("Error contacting super-peer:", error.message);
@@ -135,22 +140,25 @@ app.post("/get-file", async (req, res) => {
 
 // API to fetch file from the peer/server
 app.post("/fetch-file", async (req, res) => {
-  const { trackID } = req.body;
-  const clientIP = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const { trackId } = req.body;
+  const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
-  if (!trackID) {
-    return res.status(400).json({ error: "trackID is required" });
+  if (!trackId) {
+    return res.status(400).json({ error: "trackId is required" });
   }
 
   try {
-    // Fetch metadata from MongoDB using trackID
-    const fileRecord = await TrackLog.findOne({ trackId: trackID });
+    // Fetch metadata from MongoDB using trackId
+    const fileRecord = await TrackLog.findOne({ trackId: trackId });
 
     if (!fileRecord) {
       return res.status(404).json({ error: "File metadata not found" });
     }
 
-    const filePath = path.join(FILES_DIR, `${trackID}.mp3`); // Ensure the correct file path
+    const filePath = path.join(
+      FILES_DIR,
+      `${fileRecord.trackMetadata.fileName}`
+    ); // Ensure the correct file path
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: "File not found" });
@@ -161,7 +169,7 @@ app.post("/fetch-file", async (req, res) => {
 
     // Prepare payload for client backend
     const track = {
-      trackID: fileRecord.trackId,
+      trackId: fileRecord.trackId,
       fileName: fileRecord.trackMetadata.fileName,
       size: fileRecord.trackMetadata.trackSize,
       peerAvailable: fileRecord.trackMetadata.peerAvailable,
@@ -169,23 +177,27 @@ app.post("/fetch-file", async (req, res) => {
     };
 
     const availability = {
-      trackID: fileRecord.trackId,
+      trackId: fileRecord.trackId,
       peerAvailable: true,
-      clientIP: clientIP,
+      clientIp: clientIp,
     };
 
     // Send file + metadata to client backend at /load-file
-    await axios.post(`http://${clientIP}:3001/load-file`, track, {
+    await axios.post(`http://${clientIp}:3001/load-file`, track, {
       headers: { "Content-Type": "application/json" },
     });
 
     // Notify super-peer of the availability of the file
-    await axios.post(`${SUPER_PEER_URL}/update-peer-list`, availability);
+    await axios.post(
+      `${process.env.SUPER_PEER_URL}/update-peer-list`,
+      availability
+    );
 
     console.log(`Sent file to client backend: ${fileRecord.trackId}`);
 
-    res.status(200).json({ message: "File successfully sent to client backend" });
-
+    res
+      .status(200)
+      .json({ message: "File successfully sent to client backend" });
   } catch (error) {
     console.error("Server error:", error.message);
     res.status(500).json({ error: "Internal server error" });
