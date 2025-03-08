@@ -133,7 +133,7 @@ app.post("/get-file", async (req, res) => {
           console.log(`File found at: ${peerIp}`);
 
           // Now make another request to fetch the file from the identified source (peer/server)
-          const fileResponse = await axios.post(`http://${peerIp}/fetch-file`, {
+          const fileResponse = await axios.post(`http://${peerIp}:3001/fetch-file`, {
             trackId,
           });
           return res.status(200).json({ file: fileResponse.data.file });
