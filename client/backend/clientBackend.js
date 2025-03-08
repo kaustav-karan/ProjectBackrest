@@ -231,6 +231,6 @@ app.post("/fetch-file", async (req, res) => {
 });
 
 // Start the server
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(3001, () => {
+  console.log(`Server running on port 3001`);
 });

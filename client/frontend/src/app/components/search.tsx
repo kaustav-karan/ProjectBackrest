@@ -16,14 +16,18 @@ export default function SearchFile() {
 
   useEffect(() => {
     // Establish WebSocket connection
-    socket = io(process.env.CLIENT_BACKEND_Ip, {
-      path: "/",
+    socket = io("http://localhost:3001", {
       autoConnect: true,
     });
 
     socket.on("connect", () => {
       console.log("WebSocket Connected:", socket.id);
       setSocketMessage("Connected to WebSocket!");
+    });
+
+    socket.on("connect_error", (err: Error) => {
+      console.error("WebSocket Connection Error:", err);
+      setSocketMessage("WebSocket Connection Error!");
     });
 
     socket.on("message", (data: string) => {
@@ -48,10 +52,9 @@ export default function SearchFile() {
     }
 
     try {
-      const response = await axios.post(
-        `${process.env.CLIENT_BACKEND_Ip}/get-file`,
-        { trackId }
-      );
+      const response = await axios.post(`http://localhost:3001/get-file`, {
+        trackId,
+      });
 
       if (response.data.file) {
         setMessage("File fetched successfully!");
