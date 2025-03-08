@@ -1,9 +1,9 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "Server Readme",
+  "descrIption": "Server Readme",
   "main": "index.js",
-  "scripts": {
+  "scrIpts": {
     "start": "node server.js"
   },
   "keywords": [],

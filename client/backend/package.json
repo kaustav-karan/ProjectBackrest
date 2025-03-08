@@ -1,9 +1,10 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "descrIption": "",
   "main": "index.js",
-  "scripts": {
+  "scrIpts": {
+    "start": "node clientBackend.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

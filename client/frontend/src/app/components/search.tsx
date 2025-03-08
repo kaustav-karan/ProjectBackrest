@@ -9,14 +9,14 @@ require("dotenv").config(); // Load environment variables
 let socket: Socket;
 
 export default function SearchFile() {
-  const [trackID, setTrackID] = useState<string>("");
+  const [trackId, settrackId] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [socketMessage, setSocketMessage] = useState<string>("");
 
   useEffect(() => {
     // Establish WebSocket connection
-    socket = io(process.env.CLIENT_BACKEND_IP, {
+    socket = io(process.env.CLIENT_BACKEND_Ip, {
       path: "/",
       autoConnect: true,
     });
@@ -42,13 +42,16 @@ export default function SearchFile() {
   }, []);
 
   const handleSearch = async () => {
-    if (!trackID.trim()) {
+    if (!trackId.trim()) {
       setMessage("Please enter a track ID.");
       return;
     }
 
     try {
-      const response = await axios.post(`${process.env.CLIENT_BACKEND_IP}/get-file`, { trackID });
+      const response = await axios.post(
+        `${process.env.CLIENT_BACKEND_Ip}/get-file`,
+        { trackId }
+      );
 
       if (response.data.file) {
         setMessage("File fetched successfully!");
@@ -58,7 +61,7 @@ export default function SearchFile() {
         setFileContent(decodedText);
 
         // Send WebSocket event to notify backend
-        socket.emit("file-fetched", { trackID });
+        socket.emit("file-fetched", { trackId });
       } else {
         setMessage("File not found.");
         setFileContent(null);
@@ -77,8 +80,8 @@ export default function SearchFile() {
       <input
         type="text"
         placeholder="Enter track ID..."
-        value={trackID}
-        onChange={(e) => setTrackID(e.target.value)}
+        value={trackId}
+        onChange={(e) => settrackId(e.target.value)}
         className="border rounded p-2 w-80"
       />
       <button
@@ -92,7 +95,9 @@ export default function SearchFile() {
 
       {fileContent && (
         <div className="mt-4 p-2 border rounded bg-gray-200 w-96">
-          <p><strong>File Content:</strong></p>
+          <p>
+            <strong>File Content:</strong>
+          </p>
           <pre className="whitespace-pre-wrap break-words">{fileContent}</pre>
         </div>
       )}
