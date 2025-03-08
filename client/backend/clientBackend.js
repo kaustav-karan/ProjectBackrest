@@ -197,6 +197,7 @@ app.post("/fetch-file", async (req, res) => {
       trackId: fileRecord.trackId,
       fileName: fileRecord.trackMetadata.fileName,
       size: fileRecord.trackMetadata.trackSize,
+      publisherName: fileRecord.trackMetadata.publisherName,
       peerAvailable: fileRecord.trackMetadata.peerAvailable,
       file: fileBuffer.toString("base64"), // Convert binary to base64
     };
