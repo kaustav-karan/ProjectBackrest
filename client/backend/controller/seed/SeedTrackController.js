@@ -1,10 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const TrackMetadataSchema = require("./models/TrackMetadataSchema"); // Adjust the path to your schema
+const notifySuperPeer = require("./outboundReq/availNotifySuperPeer");
 
 async function SeedTrack(req, res) {
   try {
     const { trackId } = req.body;
+    const clientIp = req.headers["x-forwarded-for"];
 
     // Validate trackId
     if (!trackId) {
@@ -43,6 +45,9 @@ async function SeedTrack(req, res) {
 
         // Send json response
         res.status(200).send({ trackId, trackName, publisherName, size });
+
+        // Notify the super Peer of the availability of the file
+        notifySuperPeer(trackId, clientIp);
       });
     });
   } catch (error) {
