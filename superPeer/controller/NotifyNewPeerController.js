@@ -19,19 +19,15 @@ async function NotifyNewPeer(req, res) {
     track.trackMetadata.peerAvailable =
       peerAvailable !== undefined ? peerAvailable : false;
 
-    // Create a new peer object
-    const peer = {
-      clientIp: clientIp,
-      peerAvailable: peerAvailable !== undefined ? peerAvailable : false,
-    };
-
     // Initialize peerList if it doesn't exist
     if (!track.trackMetadata.peerList) {
       track.trackMetadata.peerList = [];
     }
 
     // Add the new peer to the peerList
-    track.trackMetadata.peerList.push(peer);
+    track.trackMetadata.peerList.push({
+      trackUri: clientIp,
+    });
 
     // Save the updated track
     await track.save();
