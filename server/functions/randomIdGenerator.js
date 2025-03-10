@@ -1,4 +1,4 @@
-function randomIDGenerator(length = 3) {
+function randomIdGenerator(length = 3) {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let result = "";
     for (let i = 0; i < length; i++) {
@@ -7,4 +7,4 @@ function randomIDGenerator(length = 3) {
     return result;
   }
   
-  module.exports = randomIDGenerator;
+module.exports = randomIdGenerator;
