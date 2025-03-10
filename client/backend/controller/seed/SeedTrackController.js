@@ -13,6 +13,7 @@ async function SeedTrack(req, res) {
 
     // Check if trackId is present in MongoDB
     const track = await TrackMetadataSchema.findOne({ trackId: trackId });
+    const { trackName, publisherName, size } = track;
     if (!track) {
       return res.status(404).send({ error: "Track not found" });
     }
@@ -39,6 +40,9 @@ async function SeedTrack(req, res) {
           console.error("Error sending file:", err);
           res.status(500).send({ error: "Error sending file" });
         }
+
+        // Send json response
+        res.status(200).send({ trackId, trackName, publisherName, size });
       });
     });
   } catch (error) {
