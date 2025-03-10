@@ -2,7 +2,7 @@ const Track = require("../models/track.model.js");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
-const sequelize = require("../utils/psqlConnection.js");
+const notifySuperPeer = require("../outboundReq/availNotifySuperPeer.js");
 
 async function seedTrack(req, res) {
   const { trackId } = req.body;
@@ -14,39 +14,35 @@ async function seedTrack(req, res) {
 
     const trackPath = path.join(FILES_DIR, fileRecord.trackPath); // Ensure path is correct
 
-    // Read the entire file into memory
-    const fileBuffer = fs.readFileSync(trackPath);
+    // Check if the file exists
+    fs.access(trackPath, fs.constants.F_OK, (err) => {
+      if (err) {
+        return res.status(404).send({ error: "File not found" });
+      }
 
-    // Prepare payload for client backend
-    const track = {
-      trackId: fileRecord.trackId,
-      size: fileRecord.size,
-      publisherName: fileRecord.publisherName,
-      file: fileBuffer.toString("base64"), // Convert binary to base64
-    };
+      // Set headers for file download
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${path.basename(trackPath)}"`
+      );
+      res.setHeader("Content-Type", "application/octet-stream");
 
-    const availability = {
-      trackId: fileRecord.trackId,
-      peerAvailable: true,
-      clientIp: clientIp,
-    };
+      // Send the file
+      res.sendFile(trackPath, (err) => {
+        if (err) {
+          console.error("Error sending file:", err);
+          res.status(500).send({ error: "Error sending file" });
+        }
 
-    // Send file + metadata to client backend at /load-file
-    await axios.post(`http://${clientIp}:3001/load-file`, track, {
-      headers: { "Content-Type": "application/json" },
+        // Send json response
+        res.status(200).send({ trackId, trackName, publisherName, size });
+        console.log(`Sent file and metadata to ${clientIp} backend: ${fileRecord.trackId}`);
+      });
     });
 
     //notify super-peer of the availability of the file
-    await axios.post(
-      `${process.env.SUPER_PEER_URL}/update-peer-list`,
-      availability
-    );
+    notifySuperPeer(fileRecord.trackId, clientIp);
 
-    console.log(`Sent file to client backend: ${fileRecord.trackId}`);
-
-    res
-      .status(200)
-      .json({ message: "File successfully sent to client backend" });
   } catch (error) {
     console.error("Server error:", error.message);
     res.status(500).json({ error: "Internal server error" });
