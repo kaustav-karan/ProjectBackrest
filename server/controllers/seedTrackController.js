@@ -1,7 +1,5 @@
-const Track = require("../models/track.model.js");
 const fs = require("fs");
 const path = require("path");
-const axios = require("axios");
 const notifySuperPeer = require("../outboundReq/availNotifySuperPeer.js");
 
 async function seedTrack(req, res) {
@@ -12,6 +10,7 @@ async function seedTrack(req, res) {
     // Fetch metadata from PostgreSQL using trackId
     const fileRecord = await File.findOne({ where: { trackId } });
 
+    // extract the trackPath from the metaData.
     const trackPath = path.join(FILES_DIR, fileRecord.trackPath); // Ensure path is correct
 
     // Check if the file exists
@@ -36,15 +35,18 @@ async function seedTrack(req, res) {
 
         // Send json response
         res.status(200).send({ trackId, trackName, publisherName, size });
-        console.log(`Sent file and metadata to ${clientIp} backend: ${fileRecord.trackId}`);
+        console.log(
+          `Sent file and metadata to ${clientIp} backend: ${fileRecord.trackId}`
+        );
       });
     });
 
     //notify super-peer of the availability of the file
     notifySuperPeer(fileRecord.trackId, clientIp);
-
   } catch (error) {
     console.error("Server error:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+model.exports = seedTrack;

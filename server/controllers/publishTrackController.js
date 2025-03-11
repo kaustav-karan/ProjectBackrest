@@ -1,8 +1,3 @@
-const Track = require("../models/track.model.js");
-const fs = require("fs");
-const path = require("path");
-const axios = require("axios");
-const sequelize = require("../utils/psqlConnection.js");
 const randId = require("../functions/randomIdGenerator.js");
 const storeMetadata = require("../functions/storeMetadata.js");
 const notifySuperPeer = require("../outboundReq/notifySuperPeer.js");
@@ -24,6 +19,9 @@ const publishTrackController = (req, res) => {
       req.file.size,
       `/publishedTracks/${req.file.filename}`
     );
+
+    // Notify super-peer of the availability of the file
+    notifySuperPeer(trackId, req.file.size, publisherName);
 
     res.status(200).json({
       message: "File uploaded and metadata stored successfully",

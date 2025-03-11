@@ -26,6 +26,7 @@ const TrackLogSchema = new mongoose.Schema({
     peerAvailable: {
       type: Boolean,
       required: true,
+      default: false
     },
     peerList: [peerModel],
   },
