@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const TrackMetadataSchema = require("./models/TrackMetadataSchema"); // Adjust the path to your schema
-const notifySuperPeer = require("./outboundReq/availNotifySuperPeer");
+const notifySuperPeer = require("../../outBoundRequests/availNotifySuperPeer");
 
 async function SeedTrack(req, res) {
   try {
