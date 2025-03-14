@@ -3,10 +3,10 @@ require("dotenv").config();
 
 async function availNotifySuperPeer(trackId, clientIp) {
   await axios
-    .post(`http://${clientIp}:3001/notifyNewPeer`, {
+    .post(`${process.env.SUPER_PEER_URL}/notifyNewPeer`, {
       trackId,
       peerAvailable: true,
-      trackUri: clientIp,
+      clientIp,
     })
     .then(() => {
       console.log("Notified super peer of the availability of the file");

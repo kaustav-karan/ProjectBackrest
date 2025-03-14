@@ -3,6 +3,6 @@ const router = express.Router();
 
 const seedTrack = require("../controllers/seedTrackController");
 
-router.post("/seedTrack", seedTrack);
+router.post("/track", seedTrack);
 
 module.exports = router;

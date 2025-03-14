@@ -1,22 +1,26 @@
 const Track = require("../models/track.model.js");
 const notifySuperPeer = require("../outboundReq/notifySuperPeer.js");
 
-const storeMetadata = async (
+async function storeMetadata (
   trackId,
   publisherName,
-  fileName,
   size,
-  trackPath
-) => {
+  trackPath,
+  fileName
+) {
   try {
     const newFile = {
-      trackId: trackId,
-      publisherName: publisherName,
-      // fileName: fileName,
-      trackSize: size,
-      trackPath: trackPath,
+      "trackId": trackId,
+      "publisherName": publisherName,
+      "trackSize": size,
+      "trackPath": trackPath,
+      "fileName": fileName,
     };
+    console.log("DEBUG: trackPath =", trackPath);
+    console.log("DEBUG: type of trackPath =", typeof trackPath);
+
     await Track.create(newFile);
+
     await notifySuperPeer(trackId, publisherName, size)
       .then(() => {
         console.log("Notified super peer");
