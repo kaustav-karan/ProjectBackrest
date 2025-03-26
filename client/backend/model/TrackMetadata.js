@@ -8,9 +8,9 @@ const TrackMetadataSchema = new mongoose.Schema({
   },
   trackPath: {
     type: String,
-    required: true,
+    required: true
   },
-  size: {
+  trackSize: {
     type: Number,
     required: true,
   },
@@ -18,6 +18,10 @@ const TrackMetadataSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  trackName: {
+    type:String,
+    required: true
+  }
 });
 
 module.exports = mongoose.model("TrackMetadata", TrackMetadataSchema);

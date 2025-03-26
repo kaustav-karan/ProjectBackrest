@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const upload = require("../../middleware/StoreTrack.js")
 
 // Middleware
 const StoreTrack = require("../../middleware/StoreTrack");
@@ -16,7 +17,7 @@ router.post("/", (_, res) => {
   res.send("Hello World");
 });
 
-router.post("/trackRequest", StoreTrack.upload, TrackRequest);
+router.post("/trackRequest",  TrackRequest);
 
 router.put("/", (_, res) => {
   res.send("Hello World");

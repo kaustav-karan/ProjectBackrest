@@ -1,5 +1,7 @@
 const express = require("express");
 require("dotenv").config();
+const cors = require("cors")
+const bodyParser = require("body-parser");
 
 // Add Custom Modules
 const mongoConnect = require("./utils/mongoConnect");
@@ -7,7 +9,11 @@ const routeConfig = require("./routes/routeConfig");
 
 // Create an express app
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors())
+const PORT = process.env.PORT;
 
 // Connect to MongoDB Function
 mongoConnect();

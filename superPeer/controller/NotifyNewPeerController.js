@@ -1,10 +1,12 @@
 const TrackLogSchema = require("../model/Track");
 
 async function NotifyNewPeer(req, res) {
-  const { trackId, clientIp, peerAvailable } = req.body;
+  console.log("server reaching out!")
+  const { trackId, peerAvailable, trackUri} = req.body;
+  console.log(trackId, peerAvailable, trackUri)
 
   // Validate required fields
-  if (!trackId || !clientIp) {
+  if (!trackId || !trackUri) {
     return res.status(400).send({ error: "trackId and clientIp are required" });
   }
 
@@ -18,6 +20,8 @@ async function NotifyNewPeer(req, res) {
     // Update peerAvailable in trackMetadata
     track.trackMetadata.peerAvailable =
       peerAvailable !== undefined ? peerAvailable : false;
+    
+    console.log("fine till here!")
 
     // Initialize peerList if it doesn't exist
     if (!track.trackMetadata.peerList) {
@@ -26,7 +30,7 @@ async function NotifyNewPeer(req, res) {
 
     // Add the new peer to the peerList
     track.trackMetadata.peerList.push({
-      trackUri: clientIp,
+      trackUri: trackUri,
     });
 
     // Save the updated track
