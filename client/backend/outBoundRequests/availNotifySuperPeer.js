@@ -3,7 +3,7 @@ require("dotenv").config();
 
 async function availNotifySuperPeer(trackId, clientIp) {
   await axios
-    .post(`http://${clientIp}:3001/notifyNewPeer`, {
+    .post(`http://${process.env.SUPER_PEER_IP}:${process.env.SUPER_PEER_PORT}/notifyNewPeer`, {
       trackId,
       peerAvailable: true,
       trackUri: clientIp,

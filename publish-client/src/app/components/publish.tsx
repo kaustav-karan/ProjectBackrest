@@ -1,5 +1,7 @@
+"use client"
 import { useState } from "react";
 import axios from "axios";
+const cors = require("cors");
 
 export default function Publish() {
   const [file, setFile] = useState<File | null>(null);
@@ -23,10 +25,10 @@ export default function Publish() {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("size", file.size.toString());
-    formData.append("publisher_name", publisherName);
+    formData.append("publisherName", publisherName);
 
     try {
-      const response = await axios.post("http://localhost:5000/upload", formData);
+      const response = await axios.post(`http://172.19.150.79:3001/upload/publishTrack`, formData);
 
       if (response.status === 200) {
         setMessage(`Upload successful! File available at: ${response.data.filePath}`);

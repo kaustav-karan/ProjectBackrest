@@ -1,90 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { io, Socket } from "socket.io-client";
-
-require("dotenv").config(); // Load environment variables
-
-let socket: Socket;
+import { useState } from "react";
 
 export default function SearchFile() {
-  const [trackId, settrackId] = useState<string>("");
+  const [trackId, setTrackId] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [fileContent, setFileContent] = useState<string | null>(null);
-  const [socketMessage, setSocketMessage] = useState<string>("");
 
-  useEffect(() => {
-    // Establish WebSocket connection
-    socket = io("http://localhost:3001", {
-      autoConnect: true,
-    });
-
-    socket.on("connect", () => {
-      console.log("WebSocket Connected:", socket.id);
-      setSocketMessage("Connected to WebSocket!");
-    });
-
-    socket.on("connect_error", (err: Error) => {
-      console.error("WebSocket Connection Error:", err);
-      setSocketMessage("WebSocket Connection Error!");
-    });
-
-    socket.on("message", (data: string) => {
-      console.log("Message from backend:", data);
-      setSocketMessage(`Backend: ${data}`);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("WebSocket Disconnected");
-      setSocketMessage("WebSocket Disconnected!");
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
-  const handleSearch = async () => {
+  async function handleSearch() {
     if (!trackId.trim()) {
       setMessage("Please enter a track ID.");
       return;
     }
 
     try {
-      const response = await axios.post(`http://localhost:3001/get-file`, {
-        trackId,
+      const response = await fetch(`http://localhost:3001/frontEnd/trackRequest`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackId }),
       });
 
-      if (response.data.file) {
-        setMessage("File fetched successfully!");
-
-        // Decode Base64 to text and set state
-        const decodedText = atob(response.data.file);
-        setFileContent(decodedText);
-
-        // Send WebSocket event to notify backend
-        socket.emit("file-fetched", { trackId });
-      } else {
-        setMessage("File not found.");
-        setFileContent(null);
+      if (!response.ok) {
+        throw new Error("Failed to fetch track.");
       }
+
+      // ✅ Convert response into text
+      const textData = await response.text();
+      setFileContent(textData);
+      setMessage("File fetched successfully!");
     } catch (err) {
       setMessage("Error fetching file.");
       console.error("Request failed:", err);
       setFileContent(null);
     }
-  };
+  }
 
   return (
     <div className="flex flex-col items-center space-y-4 p-4">
-      <p className="text-gray-600">{socketMessage}</p>
-
       <input
         type="text"
         placeholder="Enter track ID..."
         value={trackId}
-        onChange={(e) => settrackId(e.target.value)}
+        onChange={(e) => setTrackId(e.target.value)}
         className="border rounded p-2 w-80"
       />
       <button
