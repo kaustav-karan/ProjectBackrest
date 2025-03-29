@@ -18,7 +18,7 @@ function getLocalIP() {
 async function sendBeaconSignal() {
   try {
     const localIP = getLocalIP();
-    const response = await axios.post("https://beacon.korpsin.in", {
+    const response = await axios.post("https://beacon.korpsin.in/beacon", {
       device_id: "server",
       local_ip: localIP,
     });
